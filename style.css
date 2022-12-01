@@ -1,0 +1,88 @@
+body {
+	min-height: 100vh;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.connect-four {
+	--hole-box-size: 5rem;
+	--column-padding: 0.1rem;
+	position: relative;
+	padding-top: var(--hole-box-size);
+	width: calc(
+		(var(--hole-box-size, 1rem) + var(--column-padding, 0px) * 2) * var(--col-cnt)
+	);
+	height: calc(
+		var(--hole-box-size, 1rem) * var(--row-cnt) + var(--column-padding, 0px) * 2
+	);
+	cursor: pointer;
+}
+
+.connect-four .tokens {
+	position: absolute;
+}
+
+.connect-four .token {
+	position: absolute;
+	display: grid;
+	place-items: center;
+	width: var(--hole-box-size);
+	aspect-ratio: 1;
+	transition: left 100ms, top calc(400ms * var(--speed-percentage, 1)),
+		opacity 300ms;
+}
+
+.connect-four .token[data-color]::before {
+	position: absolute;
+	content: '';
+	width: 80%;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	background-color: white;
+}
+
+.connect-four .token:where([data-color='YELLOW'], [data-color='RED'])::after {
+	position: absolute;
+	content: '';
+	width: 60%;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	background-color: hsl(0 0% 0% / 0.1);
+}
+
+.connect-four .token[data-color='YELLOW']::before {
+	background-color: yellow;
+}
+
+.connect-four .token[data-color='RED']::before {
+	background-color: red;
+}
+
+.connect-four .columns {
+	position: absolute;
+	display: flex;
+	width: fit-content;
+	user-select: none;
+}
+
+.connect-four .column {
+	display: flex;
+	flex-direction: column-reverse;
+	border: var(--column-padding) solid hsl(240, 100%, 40%);
+}
+
+.connect-four .hole {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: var(--hole-box-size);
+	aspect-ratio: 1;
+	background: radial-gradient(
+		transparent 0%,
+		transparent calc(var(--hole-box-size) / 2 * 0.78),
+		hsl(240, 100%, 50%) calc(var(--hole-box-size) / 2 * 0.8)
+	);
+}
