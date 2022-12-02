@@ -15,11 +15,7 @@ interface Column {
 }
 interface Hole {
 	element: HTMLElement;
-	token: Token | null;
-}
-interface Token {
-	element: HTMLElement;
-	color: Color;
+	tokenColor: null | Color;
 }
 function createBoard(w: number, h: number): Column[] {
 	connectFourBoardElement.style.setProperty('--col-cnt', String(w));
@@ -32,7 +28,7 @@ function createBoard(w: number, h: number): Column[] {
 			holeElem.className = 'hole';
 			return {
 				element: holeElem,
-				token: null,
+				tokenColor: null,
 			};
 		});
 		columnElem.append(...holes.map((hole) => hole.element));
@@ -44,34 +40,71 @@ function createBoard(w: number, h: number): Column[] {
 	});
 }
 
-function createToken(color: Color): Token {
+function createToken(color: Color) {
 	const tokenElem = document.createElement('div');
 	tokenElem.className = 'token';
 	tokenElem.setAttribute('data-color', color);
-	return {
-		element: tokenElem,
-		color,
-	};
+	return tokenElem;
+}
+
+function checkBoardForWinner(board: Column[]): null | Color {
+	const xDirections = [-1, 0, 1] as const;
+	const yDirections = [0, 1] as const;
+	function checkForTokenLine(
+		x: number,
+		y: number,
+		color: Color,
+		xDirection: number,
+		yDirection: number,
+		depth: number,
+	): boolean {
+		if (!board[x]?.holes[y]) return false;
+		if (board[x].holes[y].tokenColor !== color) return false;
+		if (depth <= 0) return true;
+		return checkForTokenLine(
+			x + xDirection,
+			y + yDirection,
+			color,
+			xDirection,
+			yDirection,
+			depth - 1,
+		);
+	}
+	for (let x = 0; x < board.length; x++) {
+		const column = board[x];
+		for (let y = 0; y < column.holes.length; y++) {
+			const tokenColor = column.holes[y].tokenColor;
+			if (tokenColor === null) continue;
+			for (const xDirection of xDirections) {
+				for (const yDirection of yDirections) {
+					if (xDirection === 0 && yDirection === 0) continue;
+					if (checkForTokenLine(x, y, tokenColor, xDirection, yDirection, 4 - 1)) {
+						return tokenColor;
+					}
+				}
+			}
+		}
+	}
+	return null;
 }
 
 const board = createBoard(7, 6);
+let gameHasWinner = false;
 let currentColor: Color = 'YELLOW';
-let currentToken: Token = createToken(currentColor);
-currentToken.element.style.setProperty(
-	'top',
-	'calc(var(--hole-box-size) * -1)',
-);
-currentToken.element.style.setProperty(
+let currentToken: HTMLElement = createToken(currentColor);
+currentToken.style.setProperty('top', 'calc(var(--hole-box-size) * -1)');
+currentToken.style.setProperty(
 	'left',
 	`calc(${
 		connectFourBoardElement.getBoundingClientRect().width / 2
 	}px - var(--hole-box-size) / 2)`,
 );
-tokensContainer.appendChild(currentToken.element);
+tokensContainer.appendChild(currentToken);
 
 connectFourBoardElement.addEventListener('mousemove', ({ x }) => {
+	if (gameHasWinner) return;
 	const { x: boardX } = connectFourBoardElement.getBoundingClientRect();
-	currentToken.element.style.setProperty(
+	currentToken.style.setProperty(
 		'left',
 		`calc(${x - boardX}px - var(--hole-box-size) / 2)`,
 	);
@@ -80,45 +113,52 @@ connectFourBoardElement.addEventListener('mousemove', ({ x }) => {
 board.forEach((column) => {
 	let emptyIndex = 0;
 	column.element.addEventListener('mousedown', async () => {
-		// Don't do anything if column is full
-		if (emptyIndex >= column.holes.length) return;
+		if (emptyIndex >= column.holes.length) return; // Don't do anything if column is full
+		if (gameHasWinner) return;
+
+		// Save current token
+		const tokenToDrop = currentToken;
+
+		// Update board data
+		const hole = column.holes[emptyIndex];
+		hole.tokenColor = currentColor;
+
+		const { x: boardX, y: boardY } =
+			connectFourBoardElement.getBoundingClientRect();
+		const { x: holeX, y: holeY } = hole.element.getBoundingClientRect();
+
+		// Check for winner
+		const winner = checkBoardForWinner(board);
+		if (winner) {
+			gameHasWinner = true;
+			console.log(`${winner} has won!`);
+		}
 
 		// Swap color
 		if (currentColor === 'RED') currentColor = 'YELLOW';
 		else if (currentColor === 'YELLOW') currentColor = 'RED';
 		else throw `invalid color`;
 
-		// Save current token
-		const tokenToDrop = currentToken;
-
 		// Create new token
-		const hole = column.holes[emptyIndex];
-		const { x: boardX, y: boardY } =
-			connectFourBoardElement.getBoundingClientRect();
-		const { x: holeX, y: holeY } = hole.element.getBoundingClientRect();
-		currentToken = createToken(currentColor);
-		currentToken.element.style.setProperty('left', `${holeX - boardX}px`);
-		currentToken.element.style.setProperty(
-			'top',
-			'calc(var(--hole-box-size) * -2)',
-		);
-		currentToken.element.style.setProperty('opacity', '0');
-		tokensContainer.appendChild(currentToken.element);
-		setTimeout(() => {
-			currentToken.element.style.setProperty(
-				'top',
-				'calc(var(--hole-box-size) * -1)',
-			);
-			currentToken.element.style.removeProperty('opacity');
-		});
+		if (!winner) {
+			currentToken = createToken(currentColor);
+			currentToken.style.setProperty('left', `${holeX - boardX}px`);
+			currentToken.style.setProperty('top', 'calc(var(--hole-box-size) * -2)');
+			currentToken.style.setProperty('opacity', '0');
+			tokensContainer.appendChild(currentToken);
+			setTimeout(() => {
+				currentToken.style.setProperty('top', 'calc(var(--hole-box-size) * -1)');
+				currentToken.style.removeProperty('opacity');
+			});
+		}
 
-		// Drop/place token
-		tokenToDrop.element.style.setProperty(
+		// Drop/place token element
+		tokenToDrop.style.setProperty(
 			'--speed-percentage',
 			String((column.holes.length - emptyIndex) / column.holes.length),
 		);
-		tokenToDrop.element.style.setProperty('left', `${holeX - boardX}px`);
-		const isTransitioningOnAxisX = tokenToDrop.element
+		tokenToDrop.style.setProperty('left', `${holeX - boardX}px`);
+		const isTransitioningOnAxisX = tokenToDrop
 			.getAnimations()
 			.some(
 				(anim) =>
@@ -126,10 +166,10 @@ board.forEach((column) => {
 			);
 		if (isTransitioningOnAxisX) {
 			await new Promise((res) => {
-				tokenToDrop.element.addEventListener('transitionend', res, { once: true });
+				tokenToDrop.addEventListener('transitionend', res, { once: true });
 			});
 		}
-		tokenToDrop.element.style.setProperty(
+		tokenToDrop.style.setProperty(
 			'top',
 			`calc(${holeY - boardY}px - var(--hole-box-size))`,
 		);
