@@ -266,6 +266,7 @@ game.onFinish(gameFinishCB);
 
 const restartBtn = document.querySelector('.restart-btn') as HTMLElement;
 function restart() {
+	gamestateTextElem.classList.remove('win');
 	game.destroy();
 	game = new Game(
 		gameInitVals.width,

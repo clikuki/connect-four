@@ -36,13 +36,22 @@ h1 {
 	margin: 0;
 }
 
+.gamestate-text {
+	opacity: 0;
+	color: var(--primary);
+	font-weight: bold;
+	font-size: 1.2rem;
+	transition: opacity 200ms;
+}
+
 .gamestate-text.win {
+	opacity: 1;
 	animation: pop-out 500ms ease-in-out;
 }
 
 @keyframes pop-out {
 	0% {
-		scale: 1;
+		scale: 0;
 	}
 	50% {
 		scale: 1.2;
