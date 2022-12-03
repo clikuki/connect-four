@@ -7,6 +7,11 @@ const columnsContainer = connectFourBoardElement.querySelector(
 const tokensContainer = connectFourBoardElement.querySelector(
 	'.tokens',
 ) as HTMLElement;
+const gamestateTextElem = document.querySelector(
+	'.gamestate-text',
+) as HTMLElement;
+const gamestateTextDefault = gamestateTextElem.textContent;
+const restartBtn = document.querySelector('.restart-btn') as HTMLElement;
 
 type Color = 'RED' | 'YELLOW';
 interface Board {
@@ -62,6 +67,9 @@ class Game {
 	currentColor: Color = 'YELLOW';
 	currentToken: HTMLElement = createToken(this.currentColor);
 	#listenerElementList: [HTMLElement, string, (...arg: any[]) => void][] = [];
+	finishListener: ((
+		gameState: Exclude<typeof this.gameState, 'NORMAL'>,
+	) => void)[] = [];
 	constructor(w: number, h: number) {
 		this.board = createBoard(w, h);
 		this.currentToken.style.setProperty('top', 'calc(var(--hole-box-size) * -1)');
@@ -106,13 +114,11 @@ class Game {
 				const { x: holeX, y: holeY } = hole.element.getBoundingClientRect();
 
 				// Check for winner or ties
-				const winner = this.getWinner();
-				if (winner) {
-					this.gameState = winner;
-					console.log(`${winner} has won!`);
+				const gameState = this.getGameState();
+				if (gameState !== 'NORMAL') {
+					this.gameState = gameState;
+					this.finishListener.forEach((cb) => cb(gameState));
 				}
-				const isTie = this.boardIsFull();
-				if (isTie) this.gameState = 'TIE';
 
 				// Swap color
 				if (this.currentColor === 'RED') this.currentColor = 'YELLOW';
@@ -120,7 +126,7 @@ class Game {
 				else throw `invalid color`;
 
 				// Create new token
-				if (!winner && !isTie) {
+				if (gameState === 'NORMAL') {
 					this.currentToken = createToken(this.currentColor);
 					this.currentToken.style.setProperty('left', `${holeX - boardX}px`);
 					this.currentToken.style.setProperty(
@@ -167,7 +173,7 @@ class Game {
 			this.#listenerElementList.push([column.element, 'mousedown', columnClickCB]);
 		});
 	}
-	getWinner(): null | Color {
+	getGameState(): typeof this.gameState {
 		const xDirections = [-1, 0, 1] as const;
 		const yDirections = [0, 1] as const;
 		const checkForTokenLine = (
@@ -205,14 +211,16 @@ class Game {
 				}
 			}
 		}
-		return null;
-	}
-	boardIsFull() {
-		return this.board.columns.every((column) =>
+		const isFull = this.board.columns.every((column) =>
 			column.holes.every((hole) => hole.tokenColor),
 		);
+		return isFull ? 'TIE' : 'NORMAL';
+	}
+	onFinish(cb: typeof this.finishListener[0]) {
+		this.finishListener.push(cb);
 	}
 	destroy() {
+		this.finishListener.length = 0;
 		this.#listenerElementList.forEach(([elem, evType, cb]) => {
 			elem.removeEventListener(evType, cb);
 		});
@@ -224,4 +232,21 @@ class Game {
 	}
 }
 
-new Game(7, 6);
+const gameDimensions = [7, 6] as const;
+let game = new Game(...gameDimensions);
+function gameFinishCB(finishState: Color | 'TIE') {
+	const endTextObj = {
+		TIE: "It's a tie!",
+		YELLOW: 'Yellow has won!',
+		RED: 'Red has won!',
+	} as const;
+	gamestateTextElem.textContent = endTextObj[finishState];
+	gamestateTextElem.classList.add('win');
+}
+game.onFinish(gameFinishCB);
+
+restartBtn.addEventListener('click', () => {
+	game.destroy();
+	game = new Game(...gameDimensions);
+	game.onFinish(gameFinishCB);
+});
