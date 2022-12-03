@@ -300,43 +300,38 @@ matchCountElemList.forEach(
 boardWidthInput.valueAsNumber = gameInitVals.width;
 boardHeightInput.valueAsNumber = gameInitVals.height;
 boardMatchLengthInput.valueAsNumber = gameInitVals.matchLength;
-boardWidthInput.addEventListener('change', () => {
-	if (Number.isNaN(boardWidthInput.valueAsNumber)) return;
-	gameInitVals.width = boardWidthInput.valueAsNumber;
-	const newMax = Math.min(gameInitVals.width, gameInitVals.height);
+
+function updateMatchLength() {
+	const prevLength = gameInitVals.matchLength;
+	const newMaxLength = Math.min(gameInitVals.width, gameInitVals.height);
+	boardMatchLengthInput.max = String(newMaxLength);
 	gameInitVals.matchLength = Math.min(
-		newMax,
+		newMaxLength,
 		boardMatchLengthInput.valueAsNumber,
 	);
-	boardMatchLengthInput.max = String(newMax);
-	if (boardMatchLengthInput.valueAsNumber !== gameInitVals.matchLength)
+	boardMatchLengthInput.valueAsNumber = gameInitVals.matchLength;
+	if (prevLength !== gameInitVals.matchLength) {
 		matchCountElemList.forEach(
 			(elem) => (elem.textContent = String(gameInitVals.matchLength)),
 		);
-	boardMatchLengthInput.valueAsNumber = gameInitVals.matchLength;
+		document.title = `Connect ${gameInitVals.matchLength}`;
+	}
+}
+
+boardWidthInput.addEventListener('change', () => {
+	if (Number.isNaN(boardWidthInput.valueAsNumber)) return;
+	gameInitVals.width = boardWidthInput.valueAsNumber;
+	updateMatchLength();
 	restart();
 });
 boardHeightInput.addEventListener('change', () => {
 	if (Number.isNaN(boardHeightInput.valueAsNumber)) return;
 	gameInitVals.height = boardHeightInput.valueAsNumber;
-	const newMax = Math.min(gameInitVals.width, gameInitVals.height);
-	gameInitVals.matchLength = Math.min(
-		newMax,
-		boardMatchLengthInput.valueAsNumber,
-	);
-	boardMatchLengthInput.max = String(newMax);
-	if (boardMatchLengthInput.valueAsNumber !== gameInitVals.matchLength)
-		matchCountElemList.forEach(
-			(elem) => (elem.textContent = String(gameInitVals.matchLength)),
-		);
-	boardMatchLengthInput.valueAsNumber = gameInitVals.matchLength;
+	updateMatchLength();
 	restart();
 });
 boardMatchLengthInput.addEventListener('change', () => {
 	if (Number.isNaN(boardMatchLengthInput.valueAsNumber)) return;
-	gameInitVals.matchLength = boardMatchLengthInput.valueAsNumber;
-	matchCountElemList.forEach(
-		(elem) => (elem.textContent = String(gameInitVals.matchLength)),
-	);
+	updateMatchLength();
 	restart();
 });
