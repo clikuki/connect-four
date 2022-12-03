@@ -9,12 +9,38 @@
 		<title>Document</title>
 	</head>
 	<body>
-		<h1>Connect 4</h1>
-		<span class="gamestate-text">Connect 4 tokens in a row to win</span>
-		<div class="connect-four">
-			<div class="tokens"></div>
-			<div class="columns"></div>
-		</div>
-		<button class="restart-btn">Restart</button>
+		<main>
+			<h1>Connect <span class="match-count">4</span></h1>
+			<span class="instructions"
+				>Connect <span class="match-count">4</span> tokens in a row to win</span
+			>
+			<span class="gamestate-text">Placeholder text</span>
+			<div class="connect-four">
+				<div class="tokens"></div>
+				<div class="columns"></div>
+			</div>
+			<span class="link-to-me"
+				>By: <a href="https://clikuki.github.io/">Clikuki</a>
+			</span>
+		</main>
+		<aside>
+			<h2>Options</h2>
+			<button class="restart-btn">Restart</button>
+			<div class="board-config">
+				<label
+					><span>Width:</span>
+					<input type="number" class="width" value="7" min="3" max="20"
+				/></label>
+				<label
+					><span>Height:</span>
+					<input type="number" class="height" value="6" min="3" max="20"
+				/></label>
+				<label
+					><span>Connect length:</span>
+					<input type="number" class="match-length" value="3" min="3" max="6"
+				/></label>
+			</div>
+			<p>Note: Changing these values will reload the board!</p>
+		</aside>
 	</body>
 </html>

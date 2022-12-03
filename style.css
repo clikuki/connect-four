@@ -1,13 +1,11 @@
 :root {
 	--page-bg: #eee;
-	--secondary: hsl(39, 63%, 50%);
+	--primary: hsl(39, 63%, 50%);
 }
 
 body {
-	display: flex;
-	flex-direction: column;
-	justify-content: space-evenly;
-	align-items: center;
+	display: grid;
+	grid-template-columns: 2fr 1fr;
 	min-height: 100vh;
 	margin: 0;
 	background-color: var(--page-bg);
@@ -15,25 +13,27 @@ body {
 		Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
+main,
+aside {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+main {
+	justify-content: space-evenly;
+}
+
+aside {
+	background-color: #ccc;
+	gap: 0.5rem;
+}
+
 h1 {
+	font-size: 3rem;
 	border-bottom: 2px solid black;
 	padding: 0 2rem;
 	margin: 0;
-}
-
-button {
-	padding: 0 1rem;
-	font-size: 1.5rem;
-	border: none;
-	background-color: var(--secondary);
-	color: var(--page-bg);
-	border-radius: 0.5rem;
-	cursor: pointer;
-	transition: scale 100ms;
-}
-
-button:hover {
-	scale: 1.05;
 }
 
 .gamestate-text.win {
@@ -50,6 +50,62 @@ button:hover {
 	100% {
 		scale: 1;
 	}
+}
+
+h2 {
+	border-bottom: 2px solid black;
+	padding-left: 1rem;
+	width: 90%;
+}
+
+button {
+	padding: 0 1rem;
+	font-size: 1.5rem;
+	border: none;
+	background-color: var(--primary);
+	color: var(--page-bg);
+	border-radius: 0.5rem;
+	cursor: pointer;
+	transition: scale 100ms;
+}
+
+button:hover {
+	scale: 1.05;
+}
+
+.board-config {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+}
+
+.board-config label {
+	display: flex;
+	gap: 0.4rem;
+	border: 2px solid var(--primary);
+	background-color: var(--primary);
+	padding-left: 0.5rem;
+	border-radius: 0.3rem;
+}
+
+.board-config label span {
+	flex-grow: 1;
+	text-align: end;
+	color: white;
+}
+
+.board-config input {
+	width: 3rem;
+	text-align: end;
+	border: none;
+	border-radius: inherit;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	background-color: white;
+}
+
+.link-to-me a {
+	text-decoration: none;
 }
 
 /* || Connect four */
@@ -112,6 +168,8 @@ button:hover {
 	display: flex;
 	width: fit-content;
 	user-select: none;
+	border-radius: 0.2rem;
+	overflow: hidden;
 }
 
 .connect-four .column {

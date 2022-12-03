@@ -7,11 +7,6 @@ const columnsContainer = connectFourBoardElement.querySelector(
 const tokensContainer = connectFourBoardElement.querySelector(
 	'.tokens',
 ) as HTMLElement;
-const gamestateTextElem = document.querySelector(
-	'.gamestate-text',
-) as HTMLElement;
-const gamestateTextDefault = gamestateTextElem.textContent;
-const restartBtn = document.querySelector('.restart-btn') as HTMLElement;
 
 type Color = 'RED' | 'YELLOW';
 interface Board {
@@ -63,6 +58,7 @@ function createToken(color: Color) {
 
 class Game {
 	board: Board;
+	matchLength: number;
 	gameState: 'NORMAL' | 'TIE' | Color = 'NORMAL';
 	currentColor: Color = 'YELLOW';
 	currentToken: HTMLElement = createToken(this.currentColor);
@@ -70,7 +66,8 @@ class Game {
 	finishListener: ((
 		gameState: Exclude<typeof this.gameState, 'NORMAL'>,
 	) => void)[] = [];
-	constructor(w: number, h: number) {
+	constructor(w = 7, h = 6, matchLength = 4) {
+		this.matchLength = matchLength;
 		this.board = createBoard(w, h);
 		this.currentToken.style.setProperty('top', 'calc(var(--hole-box-size) * -1)');
 		this.currentToken.style.setProperty(
@@ -204,7 +201,16 @@ class Game {
 				for (const xDirection of xDirections) {
 					for (const yDirection of yDirections) {
 						if (xDirection === 0 && yDirection === 0) continue;
-						if (checkForTokenLine(x, y, tokenColor, xDirection, yDirection, 4 - 1)) {
+						if (
+							checkForTokenLine(
+								x,
+								y,
+								tokenColor,
+								xDirection,
+								yDirection,
+								this.matchLength - 1,
+							)
+						) {
 							return tokenColor;
 						}
 					}
@@ -232,8 +238,21 @@ class Game {
 	}
 }
 
-const gameDimensions = [7, 6] as const;
-let game = new Game(...gameDimensions);
+const gameInitVals = {
+	width: 7,
+	height: 6,
+	matchLength: 4,
+};
+let game = new Game(
+	gameInitVals.width,
+	gameInitVals.height,
+	gameInitVals.matchLength,
+);
+
+const gamestateTextElem = document.querySelector(
+	'.gamestate-text',
+) as HTMLElement;
+
 function gameFinishCB(finishState: Color | 'TIE') {
 	const endTextObj = {
 		TIE: "It's a tie!",
@@ -245,8 +264,78 @@ function gameFinishCB(finishState: Color | 'TIE') {
 }
 game.onFinish(gameFinishCB);
 
-restartBtn.addEventListener('click', () => {
+const restartBtn = document.querySelector('.restart-btn') as HTMLElement;
+function restart() {
 	game.destroy();
-	game = new Game(...gameDimensions);
+	game = new Game(
+		gameInitVals.width,
+		gameInitVals.height,
+		gameInitVals.matchLength,
+	);
 	game.onFinish(gameFinishCB);
+}
+restartBtn.addEventListener('click', restart);
+
+const boardConfigContainer = document.querySelector(
+	'.board-config',
+) as HTMLElement;
+const boardWidthInput = boardConfigContainer.querySelector(
+	'.width',
+) as HTMLInputElement;
+const boardHeightInput = boardConfigContainer.querySelector(
+	'.height',
+) as HTMLInputElement;
+const boardMatchLengthInput = boardConfigContainer.querySelector(
+	'.match-length',
+) as HTMLInputElement;
+
+const matchCountElemList = [
+	...document.querySelectorAll('.match-count'),
+] as HTMLElement[];
+matchCountElemList.forEach(
+	(elem) => (elem.textContent = String(gameInitVals.matchLength)),
+);
+
+boardWidthInput.valueAsNumber = gameInitVals.width;
+boardHeightInput.valueAsNumber = gameInitVals.height;
+boardMatchLengthInput.valueAsNumber = gameInitVals.matchLength;
+boardWidthInput.addEventListener('change', () => {
+	if (Number.isNaN(boardWidthInput.valueAsNumber)) return;
+	gameInitVals.width = boardWidthInput.valueAsNumber;
+	const newMax = Math.min(gameInitVals.width, gameInitVals.height);
+	gameInitVals.matchLength = Math.min(
+		newMax,
+		boardMatchLengthInput.valueAsNumber,
+	);
+	boardMatchLengthInput.max = String(newMax);
+	if (boardMatchLengthInput.valueAsNumber !== gameInitVals.matchLength)
+		matchCountElemList.forEach(
+			(elem) => (elem.textContent = String(gameInitVals.matchLength)),
+		);
+	boardMatchLengthInput.valueAsNumber = gameInitVals.matchLength;
+	restart();
+});
+boardHeightInput.addEventListener('change', () => {
+	if (Number.isNaN(boardHeightInput.valueAsNumber)) return;
+	gameInitVals.height = boardHeightInput.valueAsNumber;
+	const newMax = Math.min(gameInitVals.width, gameInitVals.height);
+	gameInitVals.matchLength = Math.min(
+		newMax,
+		boardMatchLengthInput.valueAsNumber,
+	);
+	boardMatchLengthInput.max = String(newMax);
+	if (boardMatchLengthInput.valueAsNumber !== gameInitVals.matchLength)
+		matchCountElemList.forEach(
+			(elem) => (elem.textContent = String(gameInitVals.matchLength)),
+		);
+	boardMatchLengthInput.valueAsNumber = gameInitVals.matchLength;
+	restart();
+});
+boardMatchLengthInput.addEventListener('change', () => {
+	if (Number.isNaN(boardMatchLengthInput.valueAsNumber)) return;
+	gameInitVals.matchLength = boardMatchLengthInput.valueAsNumber;
+	matchCountElemList.forEach(
+		(elem) => (elem.textContent = String(gameInitVals.matchLength)),
+	);
+	restart();
 });
